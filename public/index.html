@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat privé avec les copines</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 300px;
+            text-align: center;
+        }
+        .container h1 {
+            margin-bottom: 20px;
+        }
+        .chat-box {
+            display: none;
+        }
+        .messages {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 200px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+        }
+        input[type="text"], input[type="password"], button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Accès au Chat</h1>
+        <div class="login-box">
+            <input type="password" id="password" placeholder="Entrer le code d'accès">
+            <button onclick="checkPassword()">Accéder</button>
+        </div>
+        <div class="chat-box">
+            <h2>Chat avec les copines</h2>
+            <div class="messages" id="messages">
+                <!-- Les messages apparaîtront ici -->
+            </div>
+            <input type="text" id="messageInput" placeholder="Tape ton message...">
+            <button onclick="sendMessage()">Envoyer</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io(); // Connexion au serveur WebSocket
+        const correctPassword = '1234';
+
+        function checkPassword() {
+            const inputPassword = document.getElementById('password').value;
+            if (inputPassword === correctPassword) {
+                document.querySelector('.login-box').style.display = 'none';
+                document.querySelector('.chat-box').style.display = 'block';
+            } else {
+                alert('Mot de passe incorrect, réessaie.');
+            }
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value;
+            if (message.trim() !== '') {
+                socket.emit('chatMessage', message); // Envoi du message au serveur
+                messageInput.value = '';
+            }
+        }
+
+        // Réception des messages envoyés par le serveur
+        socket.on('chatMessage', (msg) => {
+            const messageContainer = document.getElementById('messages');
+            const newMessage = document.createElement('p');
+            newMessage.textContent = msg;
+            messageContainer.appendChild(newMessage);
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+        });
+    </script>
+</body>
+</html>
