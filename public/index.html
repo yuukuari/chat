@@ -20,7 +20,8 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            width: 300px;
+            width: 100%;
+            max-width: 400px;
             text-align: center;
         }
         .container h1 {
@@ -35,6 +36,7 @@
             height: 200px;
             overflow-y: scroll;
             margin-bottom: 10px;
+            background-color: #f9f9f9;
         }
         input[type="text"], input[type="password"], button {
             width: 100%;
@@ -42,6 +44,21 @@
             margin-bottom: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
+            font-size: 16px;
+        }
+        .login-box input {
+            margin-bottom: 15px;
+        }
+        .message {
+            margin-bottom: 10px;
+        }
+        .message .name {
+            font-weight: bold;
+        }
+        @media (max-width: 600px) {
+            .container {
+                width: 90%;
+            }
         }
     </style>
 </head>
@@ -49,6 +66,7 @@
     <div class="container">
         <h1>Accès au Chat</h1>
         <div class="login-box">
+            <input type="text" id="name" placeholder="Ton nom">
             <input type="password" id="password" placeholder="Entrer le code d'accès">
             <button onclick="checkPassword()">Accéder</button>
         </div>
@@ -62,18 +80,24 @@
         </div>
     </div>
 
+    <!-- Import de Socket.IO depuis le serveur -->
     <script src="/socket.io/socket.io.js"></script>
+
     <script>
         const socket = io(); // Connexion au serveur WebSocket
         const correctPassword = '1234';
+        let username = '';
 
         function checkPassword() {
             const inputPassword = document.getElementById('password').value;
-            if (inputPassword === correctPassword) {
+            const inputName = document.getElementById('name').value;
+
+            if (inputPassword === correctPassword && inputName.trim() !== '') {
+                username = inputName.trim(); // Sauvegarde du nom d'utilisateur
                 document.querySelector('.login-box').style.display = 'none';
                 document.querySelector('.chat-box').style.display = 'block';
             } else {
-                alert('Mot de passe incorrect, réessaie.');
+                alert('Nom ou mot de passe incorrect, réessaie.');
             }
         }
 
@@ -81,16 +105,17 @@
             const messageInput = document.getElementById('messageInput');
             const message = messageInput.value;
             if (message.trim() !== '') {
-                socket.emit('chatMessage', message); // Envoi du message au serveur
+                socket.emit('chatMessage', { name: username, message: message }); // Envoi du nom et du message au serveur
                 messageInput.value = '';
             }
         }
 
         // Réception des messages envoyés par le serveur
-        socket.on('chatMessage', (msg) => {
+        socket.on('chatMessage', (data) => {
             const messageContainer = document.getElementById('messages');
-            const newMessage = document.createElement('p');
-            newMessage.textContent = msg;
+            const newMessage = document.createElement('div');
+            newMessage.classList.add('message');
+            newMessage.innerHTML = `<span class="name">${data.name}:</span> ${data.message}`;
             messageContainer.appendChild(newMessage);
             messageContainer.scrollTop = messageContainer.scrollHeight;
         });
